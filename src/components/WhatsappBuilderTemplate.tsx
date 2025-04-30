@@ -134,6 +134,11 @@ export default function WhatsAppTemplateBuilder() {
         );
       });
 
+      // Unregister removed variables
+      for (let i = newVariables.length; i < headerVariables.length; i++) {
+        unregister(`headerVariables.${i}.value`);
+      }
+
       // Update form state only if there are changes
       if (
         normalizedText !== header ||
@@ -166,6 +171,11 @@ export default function WhatsAppTemplateBuilder() {
           `{{${index + 1}}}`
         );
       });
+
+      // Unregister removed variables
+      for (let i = newVariables.length; i < bodyVariables.length; i++) {
+        unregister(`bodyVariables.${i}.value`);
+      }
 
       if (
         normalizedText !== body ||
@@ -204,6 +214,13 @@ export default function WhatsAppTemplateBuilder() {
       const newVariables = headerVariables.filter(
         (_, idx) => idx !== indexToRemove
       );
+
+      // Unregister the removed variable and any variables beyond the new length
+      unregister(`headerVariables.${indexToRemove}.value`);
+      for (let i = newVariables.length; i < headerVariables.length; i++) {
+        unregister(`headerVariables.${i}.value`);
+      }
+
       setValue("header", updatedHeader);
       replaceHeaderVar(newVariables);
     } else if (target === "body") {
@@ -212,6 +229,13 @@ export default function WhatsAppTemplateBuilder() {
       const newVariables = bodyVariables.filter(
         (_, idx) => idx !== indexToRemove
       );
+
+      // Unregister the removed variable and any variables beyond the new length
+      unregister(`bodyVariables.${indexToRemove}.value`);
+      for (let i = newVariables.length; i < bodyVariables.length; i++) {
+        unregister(`bodyVariables.${i}.value`);
+      }
+
       setValue("body", updatedBody);
       replaceBodyVar(newVariables);
     }
@@ -235,7 +259,7 @@ export default function WhatsAppTemplateBuilder() {
 
   return (
     <div className="flex flex-col md:flex-row gap-8 p-6">
-      <DevTool control={control} />
+      <DevTool control={control} />{" "}
       <div className="w-full md:w-1/2 space-y-4">
         <div>
           <input
@@ -352,7 +376,6 @@ export default function WhatsAppTemplateBuilder() {
           Submit
         </button>
       </div>
-
       <div className="w-full md:w-1/2 bg-gray-100 p-6 rounded-lg">
         <div className="bg-white rounded-lg shadow p-4 max-w-xs mx-auto">
           <div className="text-xs text-gray-500 mb-2">Today, 14:00</div>
