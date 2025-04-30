@@ -191,7 +191,7 @@ export default function WhatsAppTemplateBuilder() {
     return text.replace(/\{\{(\d+)\}\}/g, (_, index: string) => {
       const variableValue =
         variables[parseInt(index) - 1]?.value || `{{${index}}}`;
-      return `**${variableValue}**`;
+      return `${variableValue}`;
     });
   };
 
@@ -378,7 +378,9 @@ export default function WhatsAppTemplateBuilder() {
       </div>
       <div className="w-full md:w-1/2 bg-gray-100 p-6 rounded-lg">
         <div className="bg-white rounded-lg shadow p-4 max-w-xs mx-auto">
-          <div className="text-xs text-gray-500 mb-2">Today, 14:00</div>
+          <div className="text-xs text-gray-500 mb-2">
+            {new Date().toLocaleString()}
+          </div>
           <div className="bg-green-100 p-3 rounded-lg mb-2">
             <strong className="block mb-1">
               {replaceVariables(header, headerVariables)}
