@@ -71,6 +71,112 @@ export default function WhatsAppTemplateBuilder() {
     }
   }, [buttonType, unregister]);
 
+  // Add effect to handle manual removal of placeholders from header
+  useEffect(() => {
+    const headerPlaceholders = findPlaceholders(header);
+    syncVariablesWithPlaceholders("header", headerPlaceholders);
+  }, [header]);
+
+  // Add effect to handle manual removal of placeholders from body
+  useEffect(() => {
+    const bodyPlaceholders = findPlaceholders(body);
+    syncVariablesWithPlaceholders("body", bodyPlaceholders);
+  }, [body]);
+
+  // Function to find all placeholders in a text
+  const findPlaceholders = (text: string): number[] => {
+    const placeholders: number[] = [];
+    const regex = /\{\{(\d+)\}\}/g;
+    let match;
+
+    while ((match = regex.exec(text)) !== null) {
+      placeholders.push(parseInt(match[1]));
+    }
+
+    return placeholders;
+  };
+
+  // Function to synchronize variables array with placeholders
+  const syncVariablesWithPlaceholders = (
+    target: TargetType,
+    placeholders: number[]
+  ): void => {
+    if (target === "header") {
+      // Keep only variables that have corresponding placeholders
+      // and shift indices to match placeholder numbers
+      const newVariables: Variable[] = [];
+
+      // Sort placeholders to ensure correct ordering
+      placeholders.sort((a, b) => a - b);
+
+      // Create new array with only the variables that have placeholders
+      placeholders.forEach((placeholder, newIndex) => {
+        // Adjust index to zero-based for array access
+        const oldIndex = placeholder - 1;
+
+        // If it's in range of existing variables, keep the value
+        if (oldIndex < headerVariables.length) {
+          newVariables[newIndex] = {
+            value: headerVariables[oldIndex]?.value || "",
+          };
+        } else {
+          // Add empty variable for new placeholders
+          newVariables[newIndex] = { value: "" };
+        }
+      });
+
+      // Update normalized text with properly sequential placeholders
+      let normalizedText = header;
+      findPlaceholders(header).forEach((placeholder, index) => {
+        normalizedText = normalizedText.replace(
+          `{{${placeholder}}}`,
+          `{{${index + 1}}}`
+        );
+      });
+
+      // Update form state only if there are changes
+      if (
+        normalizedText !== header ||
+        newVariables.length !== headerVariables.length
+      ) {
+        replaceHeaderVar(newVariables);
+        setValue("header", normalizedText);
+      }
+    } else if (target === "body") {
+      // Same logic for body as header
+      const newVariables: Variable[] = [];
+
+      placeholders.sort((a, b) => a - b);
+
+      placeholders.forEach((placeholder, newIndex) => {
+        const oldIndex = placeholder - 1;
+        if (oldIndex < bodyVariables.length) {
+          newVariables[newIndex] = {
+            value: bodyVariables[oldIndex]?.value || "",
+          };
+        } else {
+          newVariables[newIndex] = { value: "" };
+        }
+      });
+
+      let normalizedText = body;
+      findPlaceholders(body).forEach((placeholder, index) => {
+        normalizedText = normalizedText.replace(
+          `{{${placeholder}}}`,
+          `{{${index + 1}}}`
+        );
+      });
+
+      if (
+        normalizedText !== body ||
+        newVariables.length !== bodyVariables.length
+      ) {
+        replaceBodyVar(newVariables);
+        setValue("body", normalizedText);
+      }
+    }
+  };
+
   const replaceVariables = (text: string, variables: Variable[]): string => {
     return text.replace(/\{\{(\d+)\}\}/g, (_, index: string) => {
       const variableValue =
@@ -123,12 +229,13 @@ export default function WhatsAppTemplateBuilder() {
     }
   };
 
+  const onSubmit = (data: FormValues) => {
+    console.log(data);
+  };
+
   return (
-    <form
-      className="flex flex-col md:flex-row gap-8 p-6"
-      onSubmit={handleSubmit((data) => console.log(data))}
-    >
-      <DevTool control={control} placement="top-right" />
+    <div className="flex flex-col md:flex-row gap-8 p-6">
+      <DevTool control={control} />
       <div className="w-full md:w-1/2 space-y-4">
         <div>
           <input
@@ -238,14 +345,15 @@ export default function WhatsAppTemplateBuilder() {
         </div>
 
         <button
-          type="submit"
+          type="button"
+          onClick={handleSubmit(onSubmit)}
           className="mt-4 bg-green-600 text-white px-4 py-2 rounded"
         >
           Submit
         </button>
       </div>
 
-      <div className="w-full md:w-1/2 bg-[#ece5dd] p-6 rounded-lg">
+      <div className="w-full md:w-1/2 bg-gray-100 p-6 rounded-lg">
         <div className="bg-white rounded-lg shadow p-4 max-w-xs mx-auto">
           <div className="text-xs text-gray-500 mb-2">Today, 14:00</div>
           <div className="bg-green-100 p-3 rounded-lg mb-2">
@@ -269,6 +377,6 @@ export default function WhatsAppTemplateBuilder() {
           </div>
         </div>
       </div>
-    </form>
+    </div>
   );
 }
