@@ -1,4 +1,3 @@
-import React from 'react';
 import { ButtonType } from '../types/Whatsapp.types';
 
 export const renderButton = (button: ButtonType, index: number) => {
